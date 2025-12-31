@@ -7,11 +7,7 @@ You stay in control — no accidental data loss.
 
 ---
 
-## Install
-
-```bash
-pip install cross_paths
-```
+## <a href="https://github.com/itz-real-ks/cross_paths/blob/main/installation.md">Install</a>
 
 ## What it does
 
