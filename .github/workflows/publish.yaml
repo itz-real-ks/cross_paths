@@ -1,0 +1,56 @@
+name: Build & Publish to PyPI
+
+# NOTE:
+# The project begins at version **0.1.0**
+# Make sure both of these match:
+#
+#   cross_paths/version.py       → __version__ = "0.1.0"
+#   pyproject.toml               → version = "0.1.0"
+#
+# Then create and push the first tag:
+#   git tag v0.1.0
+#   git push origin main --tags
+#
+# This workflow publishes to PyPI *only* when a version tag like v0.1.0 is pushed.
+
+on:
+  push:
+    tags:
+      - "v*.*.*"   # triggers publish on version tags, starting from v0.1.0
+
+jobs:
+  build:
+    name: Build Python package
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install build tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine
+
+      - name: Build package (version defined in pyproject.toml → should be 0.1.0)
+        run: python -m build --wheel --sdist
+
+      - name: Import test (sanity check)
+        run: |
+          pip install dist/*.whl
+          python - << 'EOF'
+          import cross_paths
+          print("cross_paths version:", cross_paths.__version__)  # should print 0.1.0
+          EOF
+
+      - name: Publish to PyPI
+        if: startsWith(github.ref, 'refs/tags/v')  # ensures only version tags publish
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: twine upload dist/*
